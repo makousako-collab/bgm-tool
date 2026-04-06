@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BGM提案ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #faf7f2;
+    --warm: #f2ece0;
+    --sand: #e0d6c8;
+    --taupe: #b8a898;
+    --brown: #7a6558;
+    --deep: #3d2f27;
+    --accent: #c4956a;
+    --accent-light: #f0e4d4;
+    --white: #ffffff;
+    --text: #2d2420;
+    --muted: #8a7a72;
+    --border: #ddd4c8;
+  }
+
+  body {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 16px 60px;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .header-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--deep);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .divider {
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+    margin: 16px auto 0;
+    opacity: 0.5;
+  }
+
+  .form-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .row-selects {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--brown);
+    font-weight: 500;
+  }
+
+  select {
+    appearance: none;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    transition: border-color 0.2s;
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b8a898' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  select:focus {
+    border-color: var(--accent);
+    background-color: var(--accent-light);
+  }
+
+  .textarea-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .textarea-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .char-count {
+    font-size: 11px;
+    color: var(--taupe);
+  }
+
+  textarea {
+    appearance: none;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    transition: border-color 0.2s;
+    outline: none;
+    line-height: 1.8;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+    background-color: var(--accent-light);
+  }
+
+  textarea::placeholder {
+    color: var(--taupe);
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 14px;
+    background: var(--deep);
+    color: var(--cream);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-generate:hover { background: var(--brown); }
+  .btn-generate:active { transform: scale(0.99); }
+  .btn-generate:disabled { background: var(--taupe); cursor: not-allowed; }
+
+  .loading {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+    font-size: 13px;
+    display: none;
+  }
+
+  .loading-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .dot-anim::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+
+  @keyframes dots {
+    0% { content: ''; }
+    33% { content: '.'; }
+    66% { content: '..'; }
+    100% { content: '...'; }
+  }
+
+  .results { display: none; }
+
+  .results-meta {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .results-info {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .results-info strong {
+    color: var(--brown);
+    font-weight: 500;
+  }
+
+  .btn-copy-all {
+    padding: 7px 16px;
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .btn-copy-all:hover { background: var(--sand); }
+
+  .song-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .song-card:hover { border-color: var(--accent); }
+
+  .song-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .song-left { flex: 1; }
+
+  .song-num {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    margin-bottom: 3px;
+  }
+
+  .song-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--deep);
+    line-height: 1.3;
+  }
+
+  .song-reason {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .btn-copy {
+    margin-top: 12px;
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px;
+    color: var(--brown);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-copy:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-copy.copied {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .error-box {
+    background: #fff0f0;
+    border: 1px solid #f0c0c0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #a05050;
+    display: none;
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 480px) {
+    .row-selects { grid-template-columns: 1fr; }
+    .form-card { padding: 20px; }
+    h1 { font-size: 26px; }
+    .results-meta { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-label">CapCut × Instagram Reels</div>
+    <h1>BGM 提案ツール</h1>
+    <p class="subtitle">Instagram本文を貼るだけで、ぴったりのBGMを提案します</p>
+    <div class="divider"></div>
+  </header>
+
+  <div class="form-card">
+    <div class="row-selects">
+      <div class="form-group">
+        <label>曜日</label>
+        <select id="weekday">
+          <option value="">選択してください</option>
+          <option value="月曜日">月曜日</option>
+          <option value="火曜日">火曜日</option>
+          <option value="水曜日">水曜日</option>
+          <option value="木曜日">木曜日</option>
+          <option value="金曜日">金曜日</option>
+          <option value="土曜日">土曜日</option>
+          <option value="日曜日">日曜日</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>投稿時間</label>
+        <select id="time">
+          <option value="">選択してください</option>
+          <option value="7時（朝）">7時（朝）</option>
+          <option value="12時（昼）">12時（昼）</option>
+          <option value="18時（夕方）">18時（夕方）</option>
+          <option value="21時（夜）">21時（夜）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="textarea-group">
+      <div class="textarea-label-row">
+        <label>Instagram本文</label>
+        <span class="char-count" id="char-count">0文字</span>
+      </div>
+      <textarea
+        id="caption"
+        placeholder="ここに投稿する本文をそのまま貼り付けてください。&#10;&#10;例）&#10;夜になると、こんなふうに考えすぎてしまうこと、ありませんか？&#10;一日の終わりに、今日の反省が止まらなくなる夜。&#10;でも、明日の自分を信じて、今はただ、自分をいたわる時間に。🌙"
+        oninput="updateCount()"
+      ></textarea>
+    </div>
+
+    <button class="btn-generate" id="btn" onclick="generate()">BGMを提案する</button>
+    <div class="error-box" id="error-box"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="loading-icon">✦</div>
+    <div><span class="dot-anim">本文を読み取ってBGMを考えています</span></div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-meta">
+      <div class="results-info" id="results-info"></div>
+      <button class="btn-copy-all" onclick="copyAll()">リスト全体をコピー</button>
+    </div>
+    <div id="song-list"></div>
+  </div>
+
+</div>
+
+<script>
+function updateCount() {
+  const len = document.getElementById('caption').value.length;
+  document.getElementById('char-count').textContent = len + '文字';
+}
+
+async function generate() {
+  const weekday = document.getElementById('weekday').value;
+  const time = document.getElementById('time').value;
+  const caption = document.getElementById('caption').value.trim();
+
+  if (!weekday || !time || !caption) {
+    showError('すべての項目を入力してください。');
+    return;
+  }
+
+  if (caption.length < 10) {
+    showError('Instagram本文をもう少し詳しく入力してください。');
+    return;
+  }
+
+  hideError();
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('btn').disabled = true;
+
+  const jpopRule = weekday === '日曜日'
+    ? 'J-POPは本日（日曜日）のみ採用OK。世界観に合うJ-POPを積極的に提案してよい。'
+    : 'J-POPは絶対に提案しないこと（日曜日のみ解禁ルール）。インスト・アンビエント・ピアノ・やさしい英語ポップ・静かなBGMを中心に提案すること。';
+
+  const timeRules = {
+    '7時（朝）': '透明感・静けさ・やさしい始まり・朝の清々しさを重視',
+    '12時（昼）': '軽やか・明るい・前向き・ひと息つける感じを重視',
+    '18時（夕方）': 'ぬくもり・ご褒美感・やわらかさ・少し上品な余韻を重視',
+    '21時（夜）': '深い癒し・静けさ・余韻・安心感・内省的な世界観を重視'
+  };
+
+  const timeGuide = timeRules[time] || '';
+
+  const prompt = `あなたはInstagramリール用BGMの専門家です。
+以下のInstagram投稿本文と投稿条件を読んで、CapCutの無料BGMを5〜10曲提案してください。
+
+【投稿条件】
+- 曜日：${weekday}
+- 投稿時間：${time}
+- 時間帯の方針：${timeGuide}
+
+【Instagram本文】
+---
+${caption}
+---
+
+【本文から読み取ること】
+以下の要素を本文から自動で判断し、BGM選びに反映してください。
+- テーマ（スキンケア・日常・食・旅・内省 など）
+- 雰囲気（温かい・落ち着いた・上品・切ない・前向き など）
+- 感情の深さ（浅い・中程度・深い）
+- 明るさ（明るい・ニュートラル・落ち着いた・しっとり）
+- 癒し感・ご褒美感・内省感の強さ
+- 上品さ・やさしさのレベル
+
+【BGM選定ルール】
+- CapCutに実際に存在する無料曲のみ（存在しない曲名は絶対禁止）
+- CapCutの検索窓に入力しやすい正確な曲名を書く
+- 派手すぎる曲・安っぽい曲・テンションが高すぎる曲は禁止
+- 女性向け・上品・やさしい世界観を守る
+- 毎回同じ曲ばかり繰り返さず、バリエーションを持たせる
+- ${jpopRule}
+
+【出力形式】（JSON配列のみ。前後に説明文・markdown記号一切不要）
+[
+  {"title": "曲名", "reason": "この曲をすすめる理由（40〜60字）"},
+  ...
+]`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const text = data.content.map(c => c.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const songs = JSON.parse(clean);
+    if (!Array.isArray(songs) || songs.length === 0) throw new Error('parse error');
+    renderResults(songs, weekday, time);
+  } catch (e) {
+    showError('提案の取得に失敗しました。しばらくしてから再試行してください。');
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('btn').disabled = false;
+  }
+}
+
+function renderResults(songs, weekday, time) {
+  const list = document.getElementById('song-list');
+  const info = document.getElementById('results-info');
+  list.innerHTML = '';
+
+  info.innerHTML = `<strong>${weekday} ${time}</strong> の投稿本文をもとに ${songs.length}曲を提案しました`;
+
+  songs.forEach((song, i) => {
+    const card = document.createElement('div');
+    card.className = 'song-card';
+    card.innerHTML = `
+      <div class="song-num">No.${String(i+1).padStart(2,'0')}</div>
+      <div class="song-title">${escHtml(song.title)}</div>
+      <div class="song-reason">${escHtml(song.reason)}</div>
+      <button class="btn-copy">曲名をコピー</button>
+    `;
+    const btn = card.querySelector('.btn-copy');
+    btn.dataset.title = song.title;
+    btn.addEventListener('click', function() { copySong(this); });
+    list.appendChild(card);
+  });
+
+  window._songs = songs;
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copySong(btn) {
+  const title = btn.dataset.title || '';
+  const finish = () => {
+    btn.textContent = 'コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '曲名をコピー';
+      btn.classList.remove('copied');
+    }, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(title).then(finish).catch(() => fallbackCopy(title, finish));
+  } else {
+    fallbackCopy(title, finish);
+  }
+}
+
+function fallbackCopy(text, callback) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); callback(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function copyAll() {
+  if (!window._songs) return;
+  const text = window._songs.map((s, i) =>
+    `${i+1}. ${s.title}\n   ${s.reason}`
+  ).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-copy-all');
+    btn.textContent = 'コピーしました！';
+    setTimeout(() => btn.textContent = 'リスト全体をコピー', 1800);
+  });
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('error-box').style.display = 'none';
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function escAttr(str) {
+  return String(str)
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
